@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { toast } from 'react-toastify'
+
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -54,7 +56,7 @@ const SignUp = () => {
 
       navigate('/')
     } catch (error) {
-      console.log(error)
+      toast.error('Oops! Something went wrong')
     }
   }
 
