@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 import { getAuth, onAuthStateChanged } from 'firebase/auth'
 
@@ -44,6 +45,8 @@ const CreateListing = () => {
   const navigate = useNavigate()
   const isMounted = useRef(true)
 
+  const GEO_API_KEY = process.env.REACT_APP_GEOCODE_API_KEY
+
   useEffect(() => {
     if (isMounted) {
       onAuthStateChanged(auth, (user) => {
@@ -64,8 +67,43 @@ const CreateListing = () => {
     return <Spinner />
   }
 
-  const onSubmit = (event) => {
+  const onSubmit = async (event) => {
     event.preventDefault()
+
+    setLoading(true)
+
+    if (discountedPrice >= regularPrice) {
+      setLoading(false)
+      toast.error('Discounted Price must be less than regular price')
+      return
+    }
+
+    if (images.length > 6) {
+      setLoading(false)
+      toast.error('Max limit of 6 images')
+      return
+    }
+
+    let geolocation = {}
+    let location
+
+    if (geolocationEnabled) {
+      const response = await fetch(
+        `http://api.positionstack.com/v1/forward?access_key=${GEO_API_KEY}&query=${address}`
+      )
+      const data = await response.json()
+      setFormData((prevState) => ({
+        ...prevState,
+        latitude: data.data[0].latitdue,
+        longitude: data.data[0].longitude,
+      }))
+      // check for undefined address
+    } else {
+      geolocation.lat = latitude
+      geolocation.lng = longitude
+      location = address
+    }
+    setLoading(false)
   }
 
   const onMutate = (event) => {
